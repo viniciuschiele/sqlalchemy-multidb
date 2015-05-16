@@ -1,7 +1,7 @@
 =================================
 SQLAlchemy-Multidb
 =================================
-sqlalchemy-multidb provides methods to access multiple databases easily.
+sqlalchemy-multidb provides methods to load the database configurations from a config file and access multiple databases easily.
 
 |Version| |License|
 
