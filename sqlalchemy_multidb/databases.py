@@ -40,7 +40,10 @@ class DatabaseManager(object):
     def config_from_object(self, config):
         """Loads the databases from the config."""
 
-        dbs = getattr(config, 'DATABASES', None)
+        dbs = getattr(config, 'SQLALCHEMY_DATABASES', None)
+
+        if not dbs:
+            dbs = getattr(config, 'DATABASES', None)
 
         if dbs:
             for name, url in dbs.items():
