@@ -1,5 +1,5 @@
 =================================
-Flask-APScheduler
+SQLAlchemy-Multidb
 =================================
 sqlalchemy-multidb provides methods to access multiple databases easily.
 
