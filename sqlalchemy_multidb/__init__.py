@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sqlalchemy_multidb.client import SQLAlchemy
-from sqlalchemy_multidb.exceptions import DatabaseAlreadyExists
-from sqlalchemy_multidb.exceptions import DatabaseNotFound
+"""SQLAlchemy multidb."""
+
+from sqlalchemy_multidb.databases import DatabaseManager

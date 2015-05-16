@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Utility module."""
+
 
 def ref_to_obj(ref):
     """

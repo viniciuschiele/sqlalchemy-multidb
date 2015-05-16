@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Session objects."""
+
 from sqlalchemy import orm
 
 
 class Session(orm.Session):
+    """Provides support to context."""
+
     def __enter__(self):
         return self
 
