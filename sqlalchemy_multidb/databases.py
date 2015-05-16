@@ -51,6 +51,12 @@ class DatabaseManager(object):
 
         name = name or 'default'
 
+        if not isinstance(name, str):
+            raise TypeError('Parameter name should be a str.')
+
+        if not isinstance(url, str):
+            raise TypeError('Parameter url should be a str.')
+
         if name in self.__databases:
             raise DatabaseAlreadyExists(name)
 
