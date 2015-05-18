@@ -186,9 +186,9 @@ class PostgresDatabase(Database):
         super().__init__(name, url)
 
         if self.__search_path:
-            listen(self.engine, 'connect', self.__on_connect)
+            listen(self.engine, 'checkout', self.__on_checkout)
 
-    def __on_connect(self, dbapi_connection, connection_record):
+    def __on_checkout(self, dbapi_connection, connection_record, connection_proxy):
         """Called when a new connection is open."""
 
         cursor = dbapi_connection.cursor()
