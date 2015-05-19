@@ -27,14 +27,14 @@ def ref_to_obj(ref):
     if ':' not in ref:
         raise ValueError('Invalid reference')
 
-    modulename, rest = ref.split(':', 1)
+    module_name, rest = ref.split(':', 1)
     try:
-        obj = __import__(modulename)
+        obj = __import__(module_name)
     except ImportError:
         raise LookupError('Error resolving reference %s: could not import module' % ref)
 
     try:
-        for name in modulename.split('.')[1:] + rest.split('.'):
+        for name in module_name.split('.')[1:] + rest.split('.'):
             obj = getattr(obj, name)
         return obj
     except Exception:
