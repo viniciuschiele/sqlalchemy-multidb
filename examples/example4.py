@@ -12,5 +12,5 @@ dbm.config_from_object(Config())
 
 db = dbm.get_database('db1')
 
-with db.session('db1') as session:
+with db.session() as session:
     session.scalar('SELECT 1')
