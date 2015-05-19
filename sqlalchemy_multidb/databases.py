@@ -164,7 +164,7 @@ class Database(object):
         session_factory = self.__session_factories.get(key)
 
         if not session_factory:
-            session_factory = sessionmaker(self.engine, class_=Session)
+            session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
 
             scoped = kwargs.get('scoped', False)
             if scoped:
