@@ -49,6 +49,13 @@ class DatabaseManager(object):
             for name, url in dbs.items():
                 self.add_database(name, url)
 
+    def close(self):
+        """Closes all databases."""
+
+        for database in self.__databases.values():
+            database.close()
+        self.__databases.clear()
+
     def add_database(self, name, url):
         """Adds a new database from the url."""
 
@@ -89,7 +96,19 @@ class DatabaseManager(object):
 
         database.close()
 
-    def session(self, database_name=None, scoped=False):
+    def scoped_session(self, database_name=None):
+        """Gets a scoped session for the specified database."""
+
+        database_name = database_name or 'default'
+
+        database = self.__databases.get(database_name)
+
+        if database:
+            return database.scoped_session()
+
+        raise DatabaseNotFound(database_name)
+
+    def session(self, database_name=None):
         """Gets a new session for the specified database."""
 
         database_name = database_name or 'default'
@@ -97,16 +116,9 @@ class DatabaseManager(object):
         database = self.__databases.get(database_name)
 
         if database:
-            return database.session(scoped=scoped)
+            return database.session()
 
         raise DatabaseNotFound(database_name)
-
-    def close(self):
-        """Closes all databases."""
-
-        for database in self.__databases.values():
-            database.close()
-        self.__databases.clear()
 
     @staticmethod
     def __create_database(name, url):
@@ -129,8 +141,9 @@ class Database(object):
     def __init__(self, name, url):
         self.__name = name
         self.__url = url
-        self.__session_factories = {}
         self.__engine = sqlalchemy.create_engine(url)
+        self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
+        self.__scoped_session_factory = scoped_session(self.__session_factory)
 
     @property
     def name(self):
@@ -145,34 +158,21 @@ class Database(object):
     def close(self):
         """Closes the engine and all sessions opened."""
 
-        for session_factory in self.__session_factories.values():
-            session_factory.close_all()
-        self.__session_factories.clear()
+        self.__session_factory.close_all()
+        self.__session_factory = None
+
+        self.__scoped_session_factory = None
 
         self.__engine.dispose()
         self.__engine = None
 
-    def session(self, scoped=False):
+    def scoped_session(self):
+        """Gets a scoped session for the specified database."""
+        return self.__scoped_session_factory()
+
+    def session(self):
         """Gets a new session for the specified database."""
-        return self.__session_factory(scoped=scoped)()
-
-    def __session_factory(self, **kwargs):
-        """Gets a session maker."""
-
-        key = hash(frozenset(kwargs.items()))
-
-        session_factory = self.__session_factories.get(key)
-
-        if not session_factory:
-            session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
-
-            scoped = kwargs.get('scoped', False)
-            if scoped:
-                session_factory = scoped_session(session_factory)
-            self.__session_factories[key] = session_factory
-
-        return session_factory
-
+        return self.__session_factory()
 
 class PostgresDatabase(Database):
     """

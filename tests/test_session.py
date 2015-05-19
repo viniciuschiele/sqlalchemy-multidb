@@ -39,8 +39,8 @@ class TestSession(TestCase):
         self.assertNotEqual(session1, session2)
 
     def test_scoped_instances(self):
-        session1 = self.db.session(scoped=True)
-        session2 = self.db.session(scoped=True)
+        session1 = self.db.scoped_session()
+        session2 = self.db.scoped_session()
 
         self.assertEqual(session1, session2)
 
