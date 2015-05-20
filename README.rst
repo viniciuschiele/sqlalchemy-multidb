@@ -11,7 +11,7 @@ Soon... take a look at the examples to see how it works.
 
 Installation
 ===============
-You can install sqlalchemy-multidb via Python Package Index (PyPI),::
+You can install sqlalchemy-multidb via Python Package Index (PyPI_),::
 
     $ pip install sqlalchemy-multidb
 
