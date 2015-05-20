@@ -15,6 +15,9 @@
 """Unit tests for session object."""
 
 from unittest import TestCase
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import String
 from sqlalchemy_multidb import DatabaseManager
 
 
@@ -44,6 +47,15 @@ class TestSession(TestCase):
 
         self.assertEqual(session1, session2)
 
-    def test_context(self):
+    def test_model_out_of_context(self):
+        class Foo(self.db.Model):
+            __tablename__ = 'foo'
+            id = Column(Integer, primary_key=True)
+            name = Column(String)
+
         with self.db.session() as session:
-            self.assertEqual(1, session.scalar('SELECT 1'))
+            session.execute('create table foo(id int primary key, name text);')
+            session.execute("insert into foo values(1, 'foo')")
+            foo = session.query(Foo).first()
+
+        self.assertEqual(1, foo.id)
