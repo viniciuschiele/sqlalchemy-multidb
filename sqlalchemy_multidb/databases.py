@@ -18,6 +18,7 @@ import sqlalchemy
 
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.event import listen
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy_multidb.exceptions import DatabaseAlreadyExists
@@ -36,6 +37,7 @@ class DatabaseManager(object):
 
     def __init__(self):
         self.__databases = {}
+        self.Model = declarative_base()
 
     def config_from_object(self, config):
         """Loads the databases from the config."""
@@ -144,6 +146,7 @@ class Database(object):
         self.__engine = sqlalchemy.create_engine(url)
         self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
         self.__scoped_session_factory = scoped_session(self.__session_factory)
+        self.Model = declarative_base()
 
     @property
     def name(self):
