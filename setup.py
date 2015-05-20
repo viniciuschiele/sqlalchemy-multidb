@@ -2,13 +2,13 @@ from setuptools import setup
 
 setup(
     name='sqlalchemy-multidb',
-    version='0.5.0',
+    version='0.8.0',
     packages=['sqlalchemy_multidb'],
     url='https://github.com/viniciuschiele/sqlalchemy-multidb',
     license='Apache 2.0',
     author='Vinicius Chiele',
     author_email='vinicius.chiele@gmail.com',
-    description='Provides methods to connect to multiple databases easily',
+    description='Provides methods to load the database configurations from a config file and access multiple databases easily.',
     keywords=['sqlalchemy'],
     classifiers=[
           'Development Status :: 5 - Production/Stable',
