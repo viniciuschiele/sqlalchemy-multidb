@@ -47,6 +47,23 @@ class TestSession(TestCase):
 
         self.assertEqual(session1, session2)
 
+    def test_commit(self):
+        class Foo(self.db.Model):
+            __tablename__ = 'foo'
+            id = Column(Integer, primary_key=True)
+            name = Column(String)
+
+        with self.db.session() as session:
+            session.execute('create table foo(id int primary key, name text);')
+            session.execute("insert into foo values(1, 'foo')")
+
+            foo = session.query(Foo).first()
+            foo.name = 'foo2'
+            session.commit()
+            foo = session.query(Foo).first()
+
+        self.assertEqual('foo2', foo.name)
+
     def test_model_out_of_context(self):
         class Foo(self.db.Model):
             __tablename__ = 'foo'
