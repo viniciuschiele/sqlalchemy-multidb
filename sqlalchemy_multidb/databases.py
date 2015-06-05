@@ -24,11 +24,11 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy_multidb.exceptions import DatabaseAlreadyExists
 from sqlalchemy_multidb.exceptions import DatabaseNotFound
 from sqlalchemy_multidb.sessions import Session
-from sqlalchemy_multidb.util import ref_to_obj
+from sqlalchemy_multidb.util import import_string
 
 
 DATABASE_ALIASES = {
-    'postgresql': 'sqlalchemy_multidb.databases:PostgresDatabase',
+    'postgresql': 'sqlalchemy_multidb.databases.PostgresDatabase',
 }
 
 
@@ -133,7 +133,7 @@ class DatabaseManager(object):
         if class_name is None:
             return Database(name, url)
 
-        database_cls = ref_to_obj(class_name)
+        database_cls = import_string(class_name)
         return database_cls(name, url)
 
 

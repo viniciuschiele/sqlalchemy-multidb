@@ -14,28 +14,22 @@
 
 """Utility module."""
 
+from importlib import import_module
 
-def ref_to_obj(ref):
-    """
-    Returns the object pointed to by ``ref``.
 
-    :type ref: str
-    """
-
-    if not isinstance(ref, str):
-        raise TypeError('References must be strings')
-    if ':' not in ref:
-        raise ValueError('Invalid reference')
-
-    module_name, rest = ref.split(':', 1)
-    try:
-        obj = __import__(module_name)
-    except ImportError:
-        raise LookupError('Error resolving reference %s: could not import module' % ref)
+def import_string(dotted_path):
+    """Imports a class from the its full path."""
 
     try:
-        for name in module_name.split('.')[1:] + rest.split('.'):
-            obj = getattr(obj, name)
-        return obj
-    except Exception:
-        raise LookupError('Error resolving reference %s: error looking up object' % ref)
+        module_path, class_name = dotted_path.rsplit('.', 1)
+    except ValueError:
+        msg = "%s doesn't look like a module path" % dotted_path
+        raise LookupError(msg)
+
+    module = import_module(module_path)
+
+    try:
+        return getattr(module, class_name)
+    except AttributeError:
+        msg = 'Module "%s" does not define a "%s" attribute/class' % (dotted_path, class_name)
+        raise LookupError(msg)
