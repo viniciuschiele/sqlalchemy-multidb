@@ -10,6 +10,7 @@ setup(
     author_email='vinicius.chiele@gmail.com',
     description='Provides methods to load the database configurations from a config file and access multiple databases easily.',
     keywords=['sqlalchemy'],
+    install_requires=['sqlalchemy>=1.0.0'],
     classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Developers',
