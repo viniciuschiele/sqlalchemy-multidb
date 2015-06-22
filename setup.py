@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='sqlalchemy-multidb',
-    version='0.8.0',
+    version='0.8.1',
     packages=['sqlalchemy_multidb'],
     url='https://github.com/viniciuschiele/sqlalchemy-multidb',
     license='Apache 2.0',
