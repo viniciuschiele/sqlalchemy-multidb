@@ -142,8 +142,8 @@ class Database(object):
 
     def __init__(self, name, url):
         self.__name = name
-        self.__url = url
-        self.__engine = sqlalchemy.create_engine(url)
+        self.__url, engine_params = self.__pop_parameters(url)
+        self.__engine = sqlalchemy.create_engine(url, **engine_params)
         self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
         self.__scoped_session_factory = scoped_session(self.__session_factory)
         self.Model = declarative_base()
@@ -177,6 +177,21 @@ class Database(object):
         """Gets a new session for the specified database."""
         return self.__session_factory()
 
+    @staticmethod
+    def __pop_parameters(url):
+        """Removes and returns all query string parameters from the url."""
+        uri = make_url(url)
+
+        params = {}
+
+        for key, value in uri.query.items():
+            params[key] = value
+
+        uri.query.clear()
+
+        return str(uri), params
+
+
 class PostgresDatabase(Database):
     """
     Postgresql implementation.
@@ -184,9 +199,10 @@ class PostgresDatabase(Database):
     """
 
     def __init__(self, name, url):
-        url, self.__search_path = self.__pop_search_path(url)
+        uri = make_url(url)
+        self.__search_path = uri.query.pop('search_path', None)
 
-        super().__init__(name, url)
+        super().__init__(name, str(uri))
 
         if self.__search_path:
             listen(self.engine, 'checkout', self.__on_checkout)
@@ -197,11 +213,3 @@ class PostgresDatabase(Database):
         cursor = dbapi_connection.cursor()
         cursor.execute('SET search_path TO ' + self.__search_path)
         cursor.close()
-
-    @staticmethod
-    def __pop_search_path(url):
-        """Gets the parameter search_path from the url."""
-
-        uri = make_url(url)
-        search_path = uri.query.pop('search_path', None)
-        return str(uri), search_path
