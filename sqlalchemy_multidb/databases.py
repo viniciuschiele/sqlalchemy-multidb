@@ -142,7 +142,7 @@ class Database(object):
     def __init__(self, name, url):
         self.__name = name
         self.__url, engine_params = self.__pop_parameters(url)
-        self.__engine = sqlalchemy.create_engine(self.__url, pool_size=20)
+        self.__engine = sqlalchemy.create_engine(self.__url, **engine_params)
         self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
         self.__scoped_session_factory = scoped_session(self.__session_factory)
         self.Model = declarative_base()
