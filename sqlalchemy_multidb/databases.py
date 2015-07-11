@@ -26,7 +26,6 @@ from sqlalchemy_multidb.exceptions import DatabaseNotFound
 from sqlalchemy_multidb.sessions import Session
 from sqlalchemy_multidb.util import import_string
 
-
 DATABASE_ALIASES = {
     'postgresql': 'sqlalchemy_multidb.databases.PostgresDatabase',
 }
@@ -143,7 +142,7 @@ class Database(object):
     def __init__(self, name, url):
         self.__name = name
         self.__url, engine_params = self.__pop_parameters(url)
-        self.__engine = sqlalchemy.create_engine(url, **engine_params)
+        self.__engine = sqlalchemy.create_engine(self.__url, pool_size=20)
         self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
         self.__scoped_session_factory = scoped_session(self.__session_factory)
         self.Model = declarative_base()
@@ -180,12 +179,24 @@ class Database(object):
     @staticmethod
     def __pop_parameters(url):
         """Removes and returns all query string parameters from the url."""
+        bool_keys = ['case_sensitive', 'convert_unicode', 'echo', 'echo_pool', 'implicit_returning']
+
+        str_keys = ['encoding', 'isolation_level', 'module', 'pool_reset_on_return', 'strategy',
+                    'paramstyle', 'logging_name', 'pool_logging_name']
+
+        int_keys = ['max_overflow', 'pool_size', 'pool_recycle', 'pool_timeout', 'label_length']
+
         uri = make_url(url)
 
         params = {}
 
         for key, value in uri.query.items():
-            params[key] = value
+            if key in bool_keys:
+                params[key] = bool(value)
+            elif key in str_keys:
+                params[key] = str(value)
+            elif key in int_keys:
+                params[key] = int(value)
 
         uri.query.clear()
 
