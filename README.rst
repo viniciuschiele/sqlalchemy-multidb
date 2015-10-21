@@ -3,11 +3,11 @@ SQLAlchemy Multidb
 =================================
 sqlalchemy multidb provides methods to load the database configurations from a config file and access multiple databases easily.
 
-|Version| |License|
+|Version|
 
 Documentation
 ===============
-Soon... take a look at the examples to see how it works.
+Soon... take a look at the examples_ to see how it works.
 
 Installation
 ===============
@@ -22,11 +22,7 @@ Please use the Issues_ for feature requests and troubleshooting usage.
 .. |Version| image:: https://badge.fury.io/py/sqlalchemy-multidb.svg?
    :target: http://badge.fury.io/py/sqlalchemy-multidb
 
-.. |Downloads| image:: https://pypip.in/d/sqlalchemy-multidb/badge.svg?
-   :target: https://pypi.python.org/pypi/sqlalchemy-multidb
-   
-.. |License| image:: https://pypip.in/license/sqlalchemy-multidb/badge.svg?
-   :target: https://github.com/viniciuschiele/sqlalchemy-multidb/blob/master/LICENSE
+.. _examples: https://github.com/viniciuschiele/sqlalchemy-multidb/tree/master/examples
 
 .. _PyPi: https://pypi.python.org/pypi/sqlalchemy-multidb
 
