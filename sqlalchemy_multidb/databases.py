@@ -141,7 +141,7 @@ class Database(object):
 
     def __init__(self, name, url):
         self.__name = name
-        self.__url, engine_params = self.__pop_parameters(url)
+        self.__url, engine_params = self.__parse_url(url)
         self.__engine = sqlalchemy.create_engine(self.__url, **engine_params)
         self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
         self.__scoped_session_factory = scoped_session(self.__session_factory)
@@ -177,30 +177,44 @@ class Database(object):
         return self.__session_factory()
 
     @staticmethod
-    def __pop_parameters(url):
-        """Removes and returns all query string parameters from the url."""
-        bool_keys = ['case_sensitive', 'convert_unicode', 'echo', 'echo_pool', 'implicit_returning']
+    def __parse_url(url):
+        """Gets the parameters from the url."""
 
-        str_keys = ['encoding', 'isolation_level', 'module', 'pool_reset_on_return', 'strategy',
-                    'paramstyle', 'logging_name', 'pool_logging_name']
-
-        int_keys = ['max_overflow', 'pool_size', 'pool_recycle', 'pool_timeout', 'label_length']
+        params_keys = {
+            'case_sensitive': bool,
+            'convert_unicode': bool,
+            'echo': bool,
+            'echo_pool': bool,
+            'encoding': str,
+            'isolation_level': str,
+            'module': str,
+            'pool_reset_on_return': str,
+            'strategy': str,
+            'paramstyle': str,
+            'logging_name': str,
+            'pool_logging_name': str,
+            'max_overflow': int,
+            'pool_size': int,
+            'pool_recycle': int,
+            'pool_timeout': int,
+            'label_length': int,
+        }
 
         uri = make_url(url)
 
-        params = {}
+        kwargs = {'connect_args': {}}
 
         for key, value in uri.query.items():
-            if key in bool_keys:
-                params[key] = bool(value)
-            elif key in str_keys:
-                params[key] = str(value)
-            elif key in int_keys:
-                params[key] = int(value)
+            param_type = params_keys.get(key)
+
+            if param_type:
+                kwargs[key] = param_type(value)
+            else:
+                kwargs['connect_args'][key] = value
 
         uri.query.clear()
 
-        return str(uri), params
+        return str(uri), kwargs
 
 
 class PostgresDatabase(Database):
