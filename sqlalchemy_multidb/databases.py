@@ -21,10 +21,10 @@ from sqlalchemy.event import listen
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy_multidb.exceptions import DatabaseAlreadyExists
-from sqlalchemy_multidb.exceptions import DatabaseNotFound
-from sqlalchemy_multidb.sessions import Session
-from sqlalchemy_multidb.util import import_string
+from .exceptions import DatabaseAlreadyExists, DatabaseNotFound
+from .sessions import Session
+from .util import import_string
+
 
 DATABASE_ALIASES = {
     'postgresql': 'sqlalchemy_multidb.databases.PostgresDatabase',
@@ -32,15 +32,28 @@ DATABASE_ALIASES = {
 
 
 class DatabaseManager(object):
-    """Provides a container of databases."""
+    """
+    Provides a container of databases.
+    """
 
-    def __init__(self):
-        self.__databases = {}
+    def __init__(self, scope_func=None):
+        self._databases = {}
+        self._scope_func = scope_func
         self.Model = declarative_base()
 
-    def config_from_object(self, config):
-        """Loads the databases from the config."""
+    @property
+    def databases(self):
+        """
+        Gets the databases.
+        :return: The list with all databases.
+        """
+        return self._databases.values()
 
+    def config_from_object(self, config):
+        """
+        Loads the databases from the config.
+        :param config: The object containing the database config.
+        """
         dbs = getattr(config, 'SQLALCHEMY_DATABASES', None)
 
         if not dbs:
@@ -51,15 +64,21 @@ class DatabaseManager(object):
                 self.add_database(name, url)
 
     def close(self):
-        """Closes all databases."""
+        """
+        Closes all databases.
+        """
 
-        for database in self.__databases.values():
+        for database in self._databases.values():
             database.close()
-        self.__databases.clear()
+
+        self._databases.clear()
 
     def add_database(self, name, url):
-        """Adds a new database from the url."""
-
+        """
+        Adds a new database from the url.
+        :param name: The name of the database.
+        :param url: The connection string.
+        """
         name = name or 'default'
 
         if not isinstance(name, str):
@@ -68,17 +87,19 @@ class DatabaseManager(object):
         if not isinstance(url, str):
             raise TypeError('Parameter url should be a str.')
 
-        if name in self.__databases:
+        if name in self._databases:
             raise DatabaseAlreadyExists(name)
 
-        self.__databases[name] = self.__create_database(name, url)
+        self._databases[name] = self._create_database(name, url)
 
     def get_database(self, name=None):
-        """Gets a database by the name."""
-
+        """
+        Gets a database by the name.
+        :param name: The database name.
+        """
         name = name or 'default'
 
-        database = self.__databases.get(name)
+        database = self._databases.get(name)
 
         if database:
             return database
@@ -86,99 +107,138 @@ class DatabaseManager(object):
         raise DatabaseNotFound(name)
 
     def remove_database(self, name=None):
-        """Removes a database by the name."""
-
+        """
+        Removes a database by the name.
+        :param name: The database name.
+        """
         name = name or 'default'
 
-        database = self.__databases.pop(name, None)
+        database = self._databases.pop(name, None)
 
         if not database:
             raise DatabaseNotFound(name)
 
         database.close()
 
-    def scoped_session(self, database_name=None):
-        """Gets a scoped session for the specified database."""
-
-        database_name = database_name or 'default'
-
-        database = self.__databases.get(database_name)
-
-        if database:
-            return database.scoped_session()
-
-        raise DatabaseNotFound(database_name)
-
     def session(self, database_name=None):
-        """Gets a new session for the specified database."""
-
+        """
+        Gets a new session for the specified database.
+        :param database_name: The database name.
+        :return: The new session.
+        """
         database_name = database_name or 'default'
 
-        database = self.__databases.get(database_name)
+        database = self._databases.get(database_name)
 
         if database:
             return database.session()
 
         raise DatabaseNotFound(database_name)
 
-    @staticmethod
-    def __create_database(name, url):
-        """Creates a new database from the url."""
+    def scoped_session(self, database_name=None):
+        """
+        Gets a new scoped session for the specified database.
+        :param database_name: The database name.
+        :return: The new scoped session.
+        """
+        database_name = database_name or 'default'
 
+        database = self._databases.get(database_name)
+
+        if database:
+            return database.scoped_session()
+
+        raise DatabaseNotFound(database_name)
+
+    def _create_database(self, name, url):
+        """
+        Creates a new database from the url.
+        :param name: The database name.
+        :param url: The connection string.
+        :return: A new instance of `Database`.
+        """
         uri = make_url(url)
 
         class_name = DATABASE_ALIASES.get(uri.drivername)
 
         if class_name is None:
-            return Database(name, url)
+            database_cls = Database
+        else:
+            database_cls = import_string(class_name)
 
-        database_cls = import_string(class_name)
-        return database_cls(name, url)
+        return database_cls(name, url, scope_func=self._scope_func)
 
 
 class Database(object):
-    """Provides methods to get sessions for a specific engine."""
+    """
+    Provides methods to get sessions for a specific engine.
+    """
 
-    def __init__(self, name, url):
-        self.__name = name
-        self.__url, engine_params = self.__parse_url(url)
-        self.__engine = sqlalchemy.create_engine(self.__url, **engine_params)
-        self.__session_factory = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
-        self.__scoped_session_factory = scoped_session(self.__session_factory)
+    def __init__(self, name, url, scope_func):
+        self._name = name
+        self._url, engine_params = self._parse_url(url)
+        self._engine = sqlalchemy.create_engine(self._url, **engine_params)
+        self._session_maker = sessionmaker(self.engine, class_=Session, expire_on_commit=False)
+        self._scoped_session_maker = scoped_session(self._session_maker, scopefunc=scope_func)
         self.Model = declarative_base()
 
     @property
     def name(self):
-        """Gets the name."""
-        return self.__name
+        """
+        Gets the database name.
+        """
+        return self._name
 
     @property
     def engine(self):
-        """Gets the engine."""
-        return self.__engine
+        """
+        Gets the database engine.
+        """
+        return self._engine
+
+    @property
+    def session_maker(self):
+        """
+        Gets the session maker.
+        """
+        return self._session_maker
+
+    @property
+    def scoped_session_maker(self):
+        """
+        Gets the scoped session maker.
+        """
+        return self._scoped_session_maker
 
     def close(self):
-        """Closes the engine and all sessions opened."""
+        """
+        Closes the engine and all its sessions opened.
+        """
+        self._session_maker.close_all()
+        self._session_maker = None
 
-        self.__session_factory.close_all()
-        self.__session_factory = None
+        self._scoped_session_maker = None
 
-        self.__scoped_session_factory = None
-
-        self.__engine.dispose()
-        self.__engine = None
-
-    def scoped_session(self):
-        """Gets a scoped session for the specified database."""
-        return self.__scoped_session_factory()
+        self._engine.dispose()
+        self._engine = None
 
     def session(self):
-        """Gets a new session for the specified database."""
-        return self.__session_factory()
+        """
+        Gets a new session for the specified database.
+        """
+        return self._session_maker()
+
+    def scoped_session(self):
+        """
+        Gets a scoped session for the specified database.
+        """
+        return self._scoped_session_maker()
 
     @staticmethod
-    def __parse_url(url):
-        """Gets the parameters from the url."""
+    def _parse_url(url):
+        """
+        Gets the parameters from the url.
+        """
 
         params_keys = {
             'case_sensitive': bool,
@@ -219,15 +279,15 @@ class Database(object):
 
 class PostgresDatabase(Database):
     """
-    Postgresql implementation.
+    PostgreSQL implementation.
     Provides support to search_path from the url.
     """
 
-    def __init__(self, name, url):
+    def __init__(self, name, url, scope_func=None):
         uri = make_url(url)
         self.__search_path = uri.query.pop('search_path', None)
 
-        super().__init__(name, str(uri))
+        super().__init__(name, str(uri), scope_func)
 
         if self.__search_path:
             listen(self.engine, 'checkout', self.__on_checkout)
