@@ -5,7 +5,7 @@ setup(
     version='0.8.3',
     packages=['sqlalchemy_multidb'],
     url='https://github.com/viniciuschiele/sqlalchemy-multidb',
-    license='Apache 2.0',
+    license='MIT',
     author='Vinicius Chiele',
     author_email='vinicius.chiele@gmail.com',
     description='Provides methods to load the database configurations from a config object and access multiple databases easily.',
