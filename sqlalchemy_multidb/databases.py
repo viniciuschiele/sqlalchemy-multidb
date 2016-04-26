@@ -34,8 +34,8 @@ DATABASE_ALIASES = {
 class DatabaseManager(object):
     """
     Provides a container of databases.
+    :param scope_func: optional function which defines the current scope.
     """
-
     def __init__(self, scope_func=None):
         self._databases = {}
         self._scope_func = scope_func
@@ -287,7 +287,7 @@ class PostgresDatabase(Database):
         uri = make_url(url)
         self.__search_path = uri.query.pop('search_path', None)
 
-        super().__init__(name, str(uri), scope_func)
+        super(PostgresDatabase, self).__init__(name, str(uri), scope_func)
 
         if self.__search_path:
             listen(self.engine, 'checkout', self.__on_checkout)

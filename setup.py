@@ -8,7 +8,7 @@ setup(
     license='Apache 2.0',
     author='Vinicius Chiele',
     author_email='vinicius.chiele@gmail.com',
-    description='Provides methods to load the database configurations from a config file and access multiple databases easily.',
+    description='Provides methods to load the database configurations from a config object and access multiple databases easily.',
     keywords=['sqlalchemy'],
     install_requires=['sqlalchemy>=1.0.0'],
     classifiers=[
@@ -16,6 +16,7 @@ setup(
           'Intended Audience :: Developers',
           'Natural Language :: English',
           'Operating System :: OS Independent',
+          'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.2',
           'Programming Language :: Python :: 3.3',

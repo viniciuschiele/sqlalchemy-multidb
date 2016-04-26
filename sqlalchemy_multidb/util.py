@@ -18,7 +18,10 @@ from importlib import import_module
 
 
 def import_string(dotted_path):
-    """Imports a class from the its full path."""
+    """
+    Imports a class from the its full path.
+    :param dotted_path: The path to be imported.
+    """
 
     try:
         module_path, class_name = dotted_path.rsplit('.', 1)
