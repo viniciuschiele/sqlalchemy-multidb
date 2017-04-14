@@ -2,6 +2,7 @@
 
 import sqlalchemy
 
+from collections import Mapping
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.event import listen
 from sqlalchemy.ext.declarative import declarative_base
@@ -40,10 +41,16 @@ class DatabaseManager(object):
         Loads the databases from the config.
         :param config: The object containing the database config.
         """
-        dbs = getattr(config, 'SQLALCHEMY_DATABASES', None)
+        if isinstance(config, Mapping):
+            dbs = config.get('SQLALCHEMY_DATABASES')
+        else:
+            dbs = getattr(config, 'SQLALCHEMY_DATABASES', None)
 
         if not dbs:
-            dbs = getattr(config, 'DATABASES', None)
+            if isinstance(config, Mapping):
+                dbs = config.get('DATABASES')
+            else:
+                dbs = getattr(config, 'DATABASES', None)
 
         if dbs:
             for name, url in dbs.items():
