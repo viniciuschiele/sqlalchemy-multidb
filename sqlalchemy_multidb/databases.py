@@ -41,20 +41,12 @@ class DatabaseManager(object):
         Loads the databases from the config.
         :param config: The object containing the database config.
         """
-        if isinstance(config, Mapping):
-            dbs = config.get('SQLALCHEMY_DATABASES')
-        else:
-            dbs = getattr(config, 'SQLALCHEMY_DATABASES', None)
-
-        if not dbs:
-            if isinstance(config, Mapping):
-                dbs = config.get('DATABASES')
-            else:
-                dbs = getattr(config, 'DATABASES', None)
-
-        if dbs:
-            for name, url in dbs.items():
-                self.add_database(name, url)
+        for key in ('SQLALCHEMY_DATABASES', 'DATABASES', 'databases'):
+            databases = self._get_databases_from_object(key, config)
+            if databases is not None:
+                for name, url in databases.items():
+                    self.add_database(name, url)
+                break
 
     def close(self):
         """
@@ -69,8 +61,8 @@ class DatabaseManager(object):
     def add_database(self, name, url):
         """
         Adds a new database from the url.
-        :param name: The name of the database.
-        :param url: The connection string.
+        :param str name: The name of the database.
+        :param str url: The connection string.
         """
         name = name or 'default'
 
@@ -88,7 +80,8 @@ class DatabaseManager(object):
     def get_database(self, name=None):
         """
         Gets a database by the name.
-        :param name: The database name.
+        :param str name: The database name.
+        :return Database: The database object.
         """
         name = name or 'default'
 
@@ -116,7 +109,7 @@ class DatabaseManager(object):
     def session(self, database_name=None):
         """
         Gets a new session for the specified database.
-        :param database_name: The database name.
+        :param str database_name: The database name.
         :return: The new session.
         """
         database_name = database_name or 'default'
@@ -131,7 +124,7 @@ class DatabaseManager(object):
     def scoped_session(self, database_name=None):
         """
         Gets a new scoped session for the specified database.
-        :param database_name: The database name.
+        :param str database_name: The database name.
         :return: The new scoped session.
         """
         database_name = database_name or 'default'
@@ -146,9 +139,9 @@ class DatabaseManager(object):
     def _create_database(self, name, url):
         """
         Creates a new database from the url.
-        :param name: The database name.
-        :param url: The connection string.
-        :return: A new instance of `Database`.
+        :param str name: The database name.
+        :param str url: The connection string.
+        :return Database: A new instance of `Database`.
         """
         uri = make_url(url)
 
@@ -160,6 +153,18 @@ class DatabaseManager(object):
             database_cls = import_string(class_name)
 
         return database_cls(name, url, scope_func=self._scope_func)
+
+    def _get_databases_from_object(self, key, config):
+        """
+        Get the databases from the give config object.
+        :param str key: The name of the attribute in the config object.
+        :param config: The config object.
+        :return dict: The map of databases.
+        """
+        if isinstance(config, Mapping):
+            return config.get(key)
+
+        return getattr(config, key, None)
 
 
 class Database(object):
