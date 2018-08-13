@@ -1,5 +1,8 @@
 from setuptools import setup
 
+with open('README.rst', 'r') as f:
+    long_description = f.read()
+
 setup(
     name='sqlalchemy-multidb',
     version='1.0.2',
@@ -9,6 +12,7 @@ setup(
     author='Vinicius Chiele',
     author_email='vinicius.chiele@gmail.com',
     description='Provides methods to load the database configurations from a config object and access multiple databases easily.',
+    long_description=long_description,
     keywords=['sqlalchemy'],
     install_requires=['sqlalchemy>=1.0.0'],
     classifiers=[
